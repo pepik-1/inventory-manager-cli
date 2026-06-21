@@ -9,7 +9,8 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Numeric,
-    Text
+    Text,
+    Float
     
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,21 +33,21 @@ class Supplier(Base):
     __tablename__ = "suppliers"
 
     __table_args__ = (
-        CheckConstraint("len(name) > 0", name="check_name_length"),
+        CheckConstraint("length(name) > 0", name="check_name_length"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False,unique=True)
-    phone: Mapped[str] = mapped_column(Text,)
+    phone: Mapped[str] = mapped_column(Text, nullable=True)
     email: Mapped[str] = mapped_column(Text,nullable=True, unique=True)
-    is_active: Mapped[bool] = mapped_column(Boolean,server_default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean,default=True)
     created_at: Mapped[str] = mapped_column(Date)
 
 
 
 
 class Product(Base):
-    __tablename__ = "products"
+    __tablename__ = "product"
 
     __table_args__ = (
         CheckConstraint("purchase_price >= 0", name="check_purchase_price_non_negative"),
@@ -57,12 +58,12 @@ class Product(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     sku:Mapped[int] = mapped_column(Integer,unique = True)
-    category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'),nullabel= False)
-    supplier_id: Mapped[int] = mapped_column(ForeignKey('suppliers.id'),nullabel= False)
+    category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'),nullable= False)
+    supplier_id: Mapped[int] = mapped_column(ForeignKey('suppliers.id'),nullable= False)
     purchase_price:Mapped[float] = mapped_column(Float)
     selling_price: Mapped[float] = mapped_column(Float)
     min_quantity: Mapped[int] = mapped_column(Integer)
-    is_active: Mapped[bool] = mapped_column(Boolean, server_default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[date] = mapped_column(Date)
 
 
@@ -90,4 +91,4 @@ class Stock_movement(Base):
         nullable=True,
     )
    
-   created_at: Mapped[date] = mapped_column(Date)
+    created_at: Mapped[date] = mapped_column(Date)

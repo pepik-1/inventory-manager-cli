@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import case, delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
@@ -59,161 +59,370 @@ def delete_category(cat_id:int):
         return True
 
 
-
-def create_employee(
-    name: str,
-    salary: Decimal,
-    department_id: int | None = None,
-):
+def create_supplier(name:str):
     with SessionLocal() as session:
         try:
-            employee = Employee(
-                name=name,
-                salary=salary,
-                department_id=department_id,
-            )
-            session.add(employee)
+            supplier = Supplier(name=name)
+            session.add(supplier)
             session.commit()
-            session.refresh(employee)
-            return employee
+            session.refresh(supplier)
+            return supplier
         except IntegrityError:
             session.rollback()
             return None
 
-
-def create_project(
-    name: str,
-    budget: Decimal,
-    employee_id: int | None = None,
-):
+def get_all_suppliers():
     with SessionLocal() as session:
-        try:
-            project = Project(
-                name=name,
-                budget=budget,
-                employee_id=employee_id,
-            )
-            session.add(project)
-            session.commit()
-            session.refresh(project)
-            return project
-        except IntegrityError:
-            session.rollback()
-            return None
-
-
-def get_all_departments():
-    with SessionLocal() as session:
-        stmt = select(Department)
+        stmt = select(Supplier)
         return session.execute(stmt).scalars().all()
 
-
-def get_all_employees():
+def get_supplier_by_id(sup_id:int):
     with SessionLocal() as session:
-        stmt = select(Employee)
-        return session.execute(stmt).scalars().all()
+        sup = session.get(Supplier, sup_id)
 
-def get_employee(emp_id: int):
-    with SessionLocal() as session:
-        emp = session.get(Employee, emp_id)
-
-        stmt = select(Employee).options(joinedload(Employee.profile)).where(Employee.id == emp_id)
+        stmt = select(Supplier).options(joinedload(Supplier.products)).where(Supplier.id == sup_id)
 
         return session.execute(stmt).scalar_one_or_none()
 
-def create_employee_profile(emp_id):
+def update_supplier_contacts(sup_id:int, new_name:str):
     with SessionLocal() as session:
-        emp = session.get(Employee, emp_id)
+        supplier = session.get(Supplier, sup_id)
 
-        if emp is None:
+        if supplier is None:
             return None
 
-        profile = EmployeeProfile(
-            employee_id=emp_id,
-            phone="+70000000001",
-            address="Moscow",
-            birth_date=date(1995, 5, 20),
-        )
-
-        session.add(profile)
+        supplier.name = new_name
         session.commit()
+        session.refresh(supplier)
 
-        return profile
+        return supplier
 
-
-def get_all_projects():
+def deactivate_supplier(sup_id:int):
     with SessionLocal() as session:
-        stmt = select(Project)
-        return session.execute(stmt).scalars().all()
+        supplier = session.get(Supplier, sup_id)
 
-
-def update_employee_salary(employee_id: int, new_salary: Decimal):
-    with SessionLocal() as session:
-        employee = session.get(Employee, employee_id)
-
-        if employee is None:
+        if supplier is None:
             return None
 
-        employee.salary = new_salary
+        supplier.is_active = False
         session.commit()
-        session.refresh(employee)
+        session.refresh(supplier)
 
-        return employee
+        return supplier
 
-
-def deactivate_project(project_id: int):
+def delete_supplier(sup_id:int):
     with SessionLocal() as session:
-        project = session.get(Project, project_id)
+        supplier = session.get(Supplier, sup_id)
 
-        if project is None:
-            return None
-
-        project.is_active = False
-        session.commit()
-        session.refresh(project)
-
-        return project
-
-
-def delete_project(project_id: int):
-    with SessionLocal() as session:
-        project = session.get(Project, project_id)
-
-        if project is None:
+        if supplier is None:
             return False
 
-        session.delete(project)
+        session.delete(supplier)
         session.commit()
 
         return True
 
 
-def get_employees_with_department_names():
+def create_product(name: str):
     with SessionLocal() as session:
-        stmt = (
-            select(Employee.name, Department.name)
-            .join(Department, Employee.department_id == Department.id)
-        )
+        try:
+            product = Product(name=name)
+            session.add(product)
+            session.commit()
+            session.refresh(product)
+            return product
+        except IntegrityError:
+            session.rollback()
+            return None
 
-        return session.execute(stmt).all()
+def get_all_products():
+    with SessionLocal() as session:
+        stmt = select(Product)
+        return session.execute(stmt).scalars().all()
+    
+def get_product_by_id(prod_id:int):
+    with SessionLocal() as session:
+        prod = session.get(Product, prod_id)
 
+        stmt = select(Product).options(joinedload(Product.category), joinedload(Product.supplier)).where(Product.id == prod_id)
 
-def get_projects_employees_departments():
+        return session.execute(stmt).scalar_one_or_none()
+    
+def get_products_by_category(cat_id:int):
+    with SessionLocal() as session:
+        stmt = select(Product).where(Product.category_id == cat_id)
+        return session.execute(stmt).scalars().all()
+
+def get_products_by_supplier(sup_id:int):
+    with SessionLocal() as session:
+        stmt = select(Product).where(Product.supplier_id == sup_id)
+        return session.execute(stmt).scalars().all()
+    
+def update_product_prices(prod_id:int, new_purchase_price:float, new_selling_price:float):
+    with SessionLocal() as session:
+        product = session.get(Product, prod_id)
+
+        if product is None:
+            return None
+
+        product.purchase_price = new_purchase_price
+        product.selling_price = new_selling_price
+        session.commit()
+        session.refresh(product)
+
+        return product
+    
+def update_product_min_quantity(prod_id:int, new_min_quantity:int):
+    with SessionLocal() as session:
+        product = session.get(Product, prod_id)
+
+        if product is None:
+            return None
+
+        product.min_quantity = new_min_quantity
+        session.commit()
+        session.refresh(product)
+
+        return product
+
+def deactivate_product(prod_id:int):
+    with SessionLocal() as session:
+        product = session.get(Product, prod_id)
+
+        if product is None:
+            return None
+
+        product.is_active = False
+        session.commit()
+        session.refresh(product)
+
+        return product 
+    
+def delete_product(prod_id:int):
+    with SessionLocal() as session:
+        product = session.get(Product, prod_id)
+
+        if product is None:
+            return False
+
+        session.delete(product)
+        session.commit()
+
+        return True
+    
+def create_stock_movement(product_id:int, quantity:int, movement_type:str):
+    with SessionLocal() as session:
+        try:
+            stock_movement = Stock_movement(
+                product_id=product_id,
+                quantity=quantity,
+                movement_type=movement_type
+            )
+            session.add(stock_movement)
+            session.commit()
+            session.refresh(stock_movement)
+            return stock_movement
+        except IntegrityError:
+            session.rollback()
+            return None
+        
+def get_all_stock_movements():
+    with SessionLocal() as session:
+        stmt = select(Stock_movement)
+        return session.execute(stmt).scalars().all()
+    
+def get_movements_by_product(prod_id:int):
+    with SessionLocal() as session:
+        stmt = select(Stock_movement).where(Stock_movement.product_id == prod_id)
+        return session.execute(stmt).scalars().all()
+    
+def delete_stock_movement(movement_id:int):
+    with SessionLocal() as session:
+        movement = session.get(Stock_movement, movement_id)
+
+        if movement is None:
+            return False
+
+        session.delete(movement)
+        session.commit()
+
+        return True
+
+def get_products_with_category_and_supplier():
     with SessionLocal() as session:
         stmt = (
             select(
-                Project.name.label("project_name"),
-                Employee.name.label("employee_name"),
-                Department.name.label("department_name"),
+                Product.name.label("product_name"),
+                Category.name.label("category_name"),
+                Supplier.name.label("supplier_name"),
             )
-            .join(Employee, Project.employee_id == Employee.id)
-            .join(Department, Employee.department_id == Department.id)
+            .join(Category, Product.category_id == Category.id)
+            .join(Supplier, Product.supplier_id == Supplier.id)
+        )
+
+        return session.execute(stmt).all()
+    
+def get_movements_with_product():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                Stock_movement.id.label("movement_id"),
+                Stock_movement.quantity,
+                Stock_movement.movement_type,
+                Product.name.label("product_name"),
+            )
+            .join(Product, Stock_movement.product_id == Product.id)
+        )
+
+        return session.execute(stmt).all()
+    
+def get_products_count_by_category():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                Category.name.label("category_name"),
+                func.count(Product.id).label("product_count"),
+            )
+            .join(Product, Product.category_id == Category.id)
+            .group_by(Category.id)
+        )
+
+        return session.execute(stmt).all()
+    
+def get_products_count_by_supplier():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                Supplier.name.label("supplier_name"),
+                func.count(Product.id).label("product_count"),
+            )
+            .join(Product, Product.supplier_id == Supplier.id)
+            .group_by(Supplier.id)
         )
 
         return session.execute(stmt).all()
 
-
-def count_employees():
+def get_current_stock_by_product():
     with SessionLocal() as session:
-        stmt = select(func.count(Employee.id))
+        stmt = (
+            select(
+                Product.name.label("product_name"),
+                func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                ).label("current_stock"),
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+            .group_by(Product.id)
+        )
+
+        return session.execute(stmt).all()
+    
+def get_low_stock_products():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                Product.name.label("product_name"),
+                Product.min_quantity,
+                func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                ).label("current_stock"),
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+            .group_by(Product.id)
+            .having(func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                ) < Product.min_quantity)
+        )
+
+        return session.execute(stmt).all()
+
+def get_low_stock_products():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                Product.name.label("product_name"),
+                Product.min_quantity,
+                func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                ).label("current_stock"),
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+            .group_by(Product.id)
+            .having(func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                ) < Product.min_quantity)
+        )
+
+        return session.execute(stmt).all()
+
+def get_total_purchase_value():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                func.sum(Product.purchase_price * func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                )).label("total_purchase_value")
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+        )
+
         return session.execute(stmt).scalar()
+
+def get_total_selling_value():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                func.sum(Product.selling_price * func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                )).label("total_selling_value")
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+        )
+
+        return session.execute(stmt).scalar()
+    
+def get_potential_profit():
+    with SessionLocal() as session:
+        stmt = (
+            select(
+                func.sum((Product.selling_price - Product.purchase_price) * func.sum(
+                    case(
+                        (Stock_movement.movement_type == "in", Stock_movement.quantity),
+                        (Stock_movement.movement_type == "out", -Stock_movement.quantity),
+                        else_=0,
+                    )
+                )).label("potential_profit")
+            )
+            .join(Stock_movement, Stock_movement.product_id == Product.id)
+        )
+
+        return session.execute(stmt).scalar()
+
