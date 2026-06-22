@@ -42,7 +42,9 @@ class Supplier(Base):
     email: Mapped[str] = mapped_column(Text,nullable=True, unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean,default=True)
     created_at: Mapped[str] = mapped_column(Date)
-
+    products: Mapped[list["Product"]] = relationship(
+            back_populates="supplier"
+        )
 
 
 
@@ -65,7 +67,12 @@ class Product(Base):
     min_quantity: Mapped[int] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[date] = mapped_column(Date)
-
+    supplier: Mapped["Supplier"] = relationship(
+            back_populates="products"
+        )
+    category: Mapped["Category"] = relationship(
+            back_populates="products"
+        )
 
 class Stock_movement(Base):
     __tablename__ = "stock_movements"

@@ -74,72 +74,62 @@ from crud import(
 def main():
     Base.metadata.create_all(engine)
 
-    if not get_all_categories():
-        create_category('Electronics')
-        create_category('Clothing')
-        create_category('Books')    
-    
-    if not get_all_suppliers():
-        create_supplier(
-            name = 'Supplies Inc.',
-            phone = '+7234567890',
-            email = 'pepe@gffea.com'
-        )
-    
-    if not get_all_products():
-         create_product(
-            name = 'Iphone 99',
-            sku = 1001,
-            category_id = get_all_categories()[0].id,
-            supplier_id = get_all_suppliers()[0].id,
-            purchase_price = Decimal('200.00'),
-            selling_price = Decimal('300.00'),
-            min_quantity = 10
-        )
 
-         create_product(
-            name = 't-shirt',
-            sku = 1002,
-            category_id = get_all_categories()[1].id,
-            supplier_id = get_all_suppliers()[0].id,
-            purchase_price = Decimal('10.00'),
-            selling_price = Decimal('20.00'),
-            min_quantity = 50
-        )
+    while True:
 
-         create_product(
-            name = 'smt book',
-            sku = 1003,
-            category_id = get_all_categories()[2].id,
-            supplier_id = get_all_suppliers()[0].id,
-            purchase_price = Decimal('5.00'),
-            selling_price = Decimal('15.00'),
-            min_quantity = 30
-        )
-    
-    if not get_all_stock_movements():
-        create_stock_movement(
-            product_id = get_all_products()[0].id,
-            quantity = 20,
-            movement_type = 'in',
-            movement_date = '2026-01-01'
-        )
+        print('1. Создать категорию')
+        print('2. Показать все категории')
+        print('3. Создать поставщика')
+        print('4. Показать всех поставщиков')
+        print('5. Деактивировать поставщика')
+        print(' 6. Создать товар')
+        print(' 7. Показать все товары')
+        print('8. Показать товар по id')
+        print('9. Обновить цену товара')
+        print('10. Деактивировать товар')
+        print('11. Добавить поступление товара')
+        print('12. Добавить списание товара')
+        print('13. Добавить корректировку остатка')
+        print('14. Показать историю операций')
+        print('15. Показать операции по товару')
+        print('16. Показать текущие остатки')
+        print('17. Показать товары, которые заканчиваются')
+        print('18. Показать общую стоимость склада')
+        print('19. Показать товары по категориям')
+        print('20. Показать товары по поставщикам')
+        user_choice = int(input())
 
-        create_stock_movement(
-            product_id = get_all_products()[1].id,
-            quantity = 100,
-            movement_type = 'in',
-            movement_date = '2026-01-02'
-        )
 
-        create_stock_movement(
-            product_id = get_all_products()[2].id,
-            quantity = 50,
-            movement_type = 'in',
-            movement_date = '2026-01-03'
-        )
+        if user_choice == 1:
+            user_cat = input('enter a name of a new category')
+            create_category(user_cat)
+
+        if user_choice == 2:
+            get_all_categories()
+        
+        if user_choice == 3:
+            name = input('name')
+            num = input('number')
+            email = input('email')
+            is_active = input('Yes/No')
+            if is_active == 'Yes':
+                is_active = True
+            elif is_active=='No':
+                is_active = False
+            create_supplier(name,num,email,is_active)
+
+
+
+
+
+
     
-    
+
+
+
+
+
+
 
 
     it = create_department('IT')
