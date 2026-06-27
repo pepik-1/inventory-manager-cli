@@ -27,7 +27,7 @@ def get_all_categories():
 
 def get_category_by_id(cat_id:int):
     with SessionLocal() as session:
-        cat = session.get(Employee, cat_id)
+        cat = session.get(Category, cat_id)
 
         stmt = select(Category).options(joinedload(Category.products)).where(Category.id == cat_id)
 
