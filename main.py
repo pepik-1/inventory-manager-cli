@@ -23,7 +23,7 @@ from crud import (
 )
 
 def main():
-    # Создаем таблицы в базе данных, если их еще нет
+
     Base.metadata.create_all(engine)
 
     while True:
@@ -102,14 +102,14 @@ def main():
             sku = int(input('Артикул (SKU): '))
             category_id = int(input('ID категории: '))
             supplier_id = int(input('ID поставщика: '))
-            purchase_price = float(input('Закупочная цена: ')) # Заменили Decimal на float
-            selling_price = float(input('Цена продажи: '))     # Заменили Decimal на float
+            purchase_price = float(input('Закупочная цена: ')) 
+            selling_price = float(input('Цена продажи: '))    
             min_quantity = int(input('Минимальный остаток: '))
             
             is_active_input = input('Активен? (Yes/No): ').strip().lower()
             is_active = True if is_active_input == 'yes' else False
             
-            # Убрали ручной ввод даты для товара, crud.py ставит сегодняшнюю сам
+
             prod = create_product(name, sku, category_id, supplier_id, purchase_price, selling_price, min_quantity, is_active)
             if prod:
                 print(f'Товар успешно создан с ID: {prod.id}')
@@ -144,7 +144,7 @@ def main():
         elif user_choice == 11:
             product_id = int(input('Введите ID товара: '))
             quantity = int(input('Количество для поступления: '))
-            # Убрали ввод даты
+
             create_stock_movement(product_id, quantity, 'in')
             print('Поступление успешно оформлено.')
 
@@ -163,14 +163,14 @@ def main():
         elif user_choice == 14:
             print('\n--- ИСТОРИЯ ВСЕХ ОПЕРАЦИЙ ---')
             for m in get_all_stock_movements():
-                # Исправлены имена полей на movement_type и created_at
+
                 print(f'ID операции: {m.id} | ID товара: {m.product_id} | Кол-во: {m.quantity} | Тип: {m.movement_type} | Дата: {m.created_at}')
 
         elif user_choice == 15:
             product_id = int(input('Введите ID товара: '))
             print(f'\n--- ИСТОРИЯ ПО ТОВАРУ ID {product_id} ---')
             for m in get_movements_by_product(product_id):
-                # Исправлены имена полей на movement_type и created_at
+
                 print(f'ID операции: {m.id} | Кол-во: {m.quantity} | Тип: {m.movement_type} | Дата: {m.created_at}')
 
         elif user_choice == 16:
@@ -192,13 +192,13 @@ def main():
         elif user_choice == 19:
             cat_id = int(input('Введите ID интересующей категории: '))
             print(f'\n--- ТОВАРЫ В КАТЕГОРИИ ID {cat_id} ---')
-            for product in get_products_by_category(cat_id): # Добавлен аргумент cat_id
+            for product in get_products_by_category(cat_id): 
                 print(f'ID: {product.id} | Название: {product.name}')
 
         elif user_choice == 20:
             sup_id = int(input('Введите ID интересующего поставщика: '))
             print(f'\n--- ТОВАРЫ ОТ ПОСТАВЩИКА ID {sup_id} ---')
-            for product in get_products_by_supplier(sup_id): # Добавлен аргумент sup_id
+            for product in get_products_by_supplier(sup_id):
                 print(f'ID: {product.id} | Название: {product.name}')
 
         elif user_choice == 0:
