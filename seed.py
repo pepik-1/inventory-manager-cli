@@ -1,34 +1,66 @@
-from crud import(
+from datetime import date
+from database import SessionLocal
+from models import Category, Supplier
+from sqlalchemy import select
+from crud import (
     create_category,
     create_supplier,
     create_product,
-    get_all_categories,
-    get_all_suppliers,
-    create_stock_movement,
-    get_all_products
-                 )
-
-from decimal import Decimal
+    create_stock_movement
+)
 
 def seed():
-    electronics = create_category('Electronics')
-    techtrade = create_supplier('TechTrade','7999999','pepasd@gmail.com',True,'2026-06-22T18:00:00')
-    create_product(
-            name = 'Iphone 99',
-            sku = 1001,
-            category_id = electronics.id,
-            supplier_id = techtrade.id,
-            purchase_price = Decimal('200.00'),
-            selling_price = Decimal('300.00'),
-            min_quantity = 10,
+    with SessionLocal() as session:
+        stmt_cat = select(Category).where(Category.name == 'Electronics')
+        electronics = session.execute(stmt_cat).scalar_one_or_none()
+        
+        if not electronics:
+            print("Категория 'Electronics' не найдена, создаем...")
+            electronics = create_category('Electronics')
+        else:
+            print("Категория 'Electronics' уже существует, используем её.")
+
+        stmt_sup = select(Supplier).where(Supplier.name == 'TechTrade')
+        techtrade = session.execute(stmt_sup).scalar_one_or_none()
+        
+        if not techtrade:
+            print("Поставщик 'TechTrade' не найден, создаем...")
+            techtrade = create_supplier(
+                name='TechTrade', 
+                phone='7999999', 
+                email='pepasd@gmail.com', 
+                is_active=True, 
+                date_created=date(2026, 6, 22)
+            )
+        else:
+            print("Поставщик 'TechTrade' уже существует, используем его.")
+
+
+
+    if electronics and techtrade:
+        iphone = create_product(
+            name='Iphone 99',
+            sku=1001,
+            category_id=electronics.id,
+            supplier_id=techtrade.id,
+            purchase_price=200.00,
+            selling_price=300.00,
+            min_quantity=10,
             is_active=True
         )
-    create_stock_movement(
-            product_id = get_all_products()[0].id,
-            quantity = 20,
-            movement_type = 'in',
-            movement_date = '2026-01-01'
-        )
+        
+        if iphone:
+            print("Продукт 'Iphone 99' успешно создан!")
+            create_stock_movement(
+                product_id=iphone.id,
+                quantity=20,
+                movement_type='in'
+            )
+            print("Движение товара добавлено!")
+        else:
+            print("Продукт 'Iphone 99' (SKU 1001) уже есть в базе, пропускаем создание.")
 
 
-seed()
+
+if __name__ == "__main__":
+    seed()
