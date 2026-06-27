@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload
 from database import SessionLocal
 from models import Product,Stock_movement,Supplier,Category
 from datetime import date
+from typing import Optional
 
 def create_category(name:str):
     with SessionLocal() as session:
@@ -59,10 +60,17 @@ def delete_category(cat_id:int):
         return True
 
 
-def create_supplier(name:str):
+def create_supplier(name:str,phone:str,email:str,is_active:bool,created_at:str):
     with SessionLocal() as session:
         try:
-            supplier = Supplier(name=name)
+            supplier = Supplier(
+                name=name,
+                phone = phone,
+                email = email,
+                is_active = is_active,
+                created_at = created_at
+            
+            )
             session.add(supplier)
             session.commit()
             session.refresh(supplier)
@@ -76,7 +84,7 @@ def get_all_suppliers():
         stmt = select(Supplier)
         return session.execute(stmt).scalars().all()
 
-def get_supplier_by_id(sup_id:int):
+def get_supplier_by_id(sup_id:int) -> Supplier|None:
     with SessionLocal() as session:
         sup = session.get(Supplier, sup_id)
 
@@ -84,7 +92,7 @@ def get_supplier_by_id(sup_id:int):
 
         return session.execute(stmt).scalar_one_or_none()
 
-def update_supplier_contacts(sup_id:int, new_name:str):
+def update_supplier_contacts(sup_id:int, new_name:str) -> Supplier|None:
     with SessionLocal() as session:
         supplier = session.get(Supplier, sup_id)
 
@@ -97,7 +105,7 @@ def update_supplier_contacts(sup_id:int, new_name:str):
 
         return supplier
 
-def deactivate_supplier(sup_id:int):
+def deactivate_supplier(sup_id:int) -> Supplier|None:
     with SessionLocal() as session:
         supplier = session.get(Supplier, sup_id)
 
@@ -110,7 +118,7 @@ def deactivate_supplier(sup_id:int):
 
         return supplier
 
-def delete_supplier(sup_id:int):
+def delete_supplier(sup_id:int) :
     with SessionLocal() as session:
         supplier = session.get(Supplier, sup_id)
 
@@ -123,10 +131,18 @@ def delete_supplier(sup_id:int):
         return True
 
 
-def create_product(name: str):
+def create_product(name: str, sku:int,category_id:int,supplier_id:int,purchase_price:int,selling_price:int,min_quantity:int,is_active:bool):
     with SessionLocal() as session:
         try:
-            product = Product(name=name)
+            product = Product(
+                name=name,
+                sku = sku,
+                category_id=category_id,
+                supplier_id=supplier_id,
+                purchase_price=purchase_price,
+                selling_price = selling_price,
+                min_quantity = min_quantity
+                              )
             session.add(product)
             session.commit()
             session.refresh(product)
@@ -210,13 +226,14 @@ def delete_product(prod_id:int):
 
         return True
     
-def create_stock_movement(product_id:int, quantity:int, movement_type:str):
+def create_stock_movement(product_id:int, quantity:int, movement_type:str,comment:Optional[str]):
     with SessionLocal() as session:
         try:
             stock_movement = Stock_movement(
                 product_id=product_id,
                 quantity=quantity,
-                movement_type=movement_type
+                movement_type=movement_type,
+                comment = comment
             )
             session.add(stock_movement)
             session.commit()
